@@ -195,7 +195,7 @@
             box-shadow: inset 0 -2px 0 #d9a83f;
         }
 
-        /* ---------- GRID WRAPPER (flex-grow) ---------- */
+        /* ---------- GRID WRAPPER ---------- */
         .grid-wrapper {
             flex: 1 1 auto;
             min-height: 0;
@@ -211,8 +211,8 @@
 
         .grid {
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            grid-template-rows: repeat(5, 1fr);
+            grid-template-columns: repeat(6, 1fr);
+            grid-template-rows: repeat(6, 1fr);
             gap: 7px;
             width: 100%;
             height: 100%;
@@ -399,10 +399,12 @@
 
     <script>
         (function() {
-            // ---------- FLOWER EMOJI SET (12 unique flowers for 5x5 grid: 12 pairs + 1 wildcard) ----------
+            // ---------- EMOJI SETS ----------
+            // 18 unique regular flowers to guarantee exact matching pairs
             const FLOWER_SET = [
                 '🌸', '🌺', '🌻', '🌹', '🌷', '💐', '🏵️', '🌼',
-                '🪷', '🌵', '🌴', '🍀'
+                '🪷', '🌵', '🌴', '🍀', '☘️', '🌿', '🌱', '🪴', 
+                '🌾', '🌟' // Included 🌟 as a regular pair so it doesn't act as a wildcard
             ];
 
             // ---------- GAME STATE ----------
@@ -466,16 +468,20 @@
                 renderScores();
             }
 
-            // ---------- CREATE BOARD (5x5 = 25 cards) ----------
-            // 12 pairs (24 cards) + 1 special "mindy" card (bonus or wildcard)
+            // ---------- CREATE BOARD (6x6 = 36 cards) ----------
             function createBoard() {
-                const selectedEmojis = shuffleArray([...FLOWER_SET]).slice(0, 12);
-                const pairEmojis = [...selectedEmojis, ...selectedEmojis];
-                // Add one special bonus card (a unique flower not in pairs)
-                const extraFlower = shuffleArray([...FLOWER_SET]).find(f => !selectedEmojis.includes(f)) || '🌟';
-                pairEmojis.push('🌟'); // wildcard / bonus card
+                // 1. Pick 18 unique regular flowers
+                const selectedFlowers = shuffleArray([...FLOWER_SET]).slice(0, 18);
+                
+                // 2. Create exactly 18 pairs (36 cards total)
+                const pairEmojis = [];
+                for (const emoji of selectedFlowers) {
+                    pairEmojis.push(emoji, emoji);
+                }
+                
+                // 3. Shuffle all 36 cards
                 const shuffled = shuffleArray(pairEmojis);
-                return shuffled.map(emoji => ({ emoji, matched: false, isWild: emoji === '🌟' }));
+                return shuffled.map(emoji => ({ emoji, matched: false }));
             }
 
             // ---------- RENDER GRID ----------
@@ -503,10 +509,8 @@
                 const cardA = cards[idxA];
                 const cardB = cards[idxB];
 
-                // Special wildcard rule: if either card is the wildcard '🌟', it matches any card
-                const isWildA = cardA.isWild;
-                const isWildB = cardB.isWild;
-                const isMatch = (cardA.emoji === cardB.emoji) || isWildA || isWildB;
+                // Standard memory game rule: Only exact matches count
+                const isMatch = cardA.emoji === cardB.emoji;
 
                 if (isMatch) {
                     // MATCH!
